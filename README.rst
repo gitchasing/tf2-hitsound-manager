@@ -10,9 +10,11 @@ This project implements the `TF2 Build`_ typeface, created by Andrea Wicklund.
 
 .. _TF2 Build: https://archive.ph/MFdnM
 
-Further, this `Reddit post`_ was (haphazardly) cited as the list of sounds implemented in ``data/custom_sounds.txt``.
+Further, `this Reddit post`_ was (haphazardly) cited as the list of sounds included in ``data/custom_sounds.txt``.
+`This page`_ was cited as a more comprehensive list.
 
-.. _Reddit post: https://archive.ph/Ho8ae
+.. _this Reddit post: https://archive.ph/Ho8ae
+.. _This page: https://archive.ph/Rwjq7
 
 More official sources will be cited at in future versions.
 
@@ -33,6 +35,12 @@ Installation
 
 Usage/Configuration
 *******************
+
+.. code-block:: console
+
+    $ tf2-hitsound-manager
+
+Alternatively, you can install the standalone executable/binary available on the GitHub page.
 
 Unless you have your TF2 directory
 (e.g., ``C:\Program Files (x86)\Steam\steamapps\common\Team Fortress 2``)

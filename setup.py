@@ -10,7 +10,7 @@ with open('LICENSE') as f:
 
 setup(
     name='tf2-hitsound-manager',
-    version='1.0.0a1',
+    version='1.0.1a1',
     description='A custom sound manager for Team Fortress 2',
     long_description=readme,
     author='gitchasing',
