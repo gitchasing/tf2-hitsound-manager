@@ -15,21 +15,11 @@ from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QListWidget, QLineEdi
 
 wd = os.path.dirname(__file__)
 
-class FilePathListItem (QLabel):
-    def __init__ (self, label, working_text, start, end):
-        super(QLabel, self).__init__(f"<p style=\"border: none; color: white; font-family: TF2 Build, TF2 Build; font-size: 33px;\">{label[:start]}<span style = \"background-color: gold\">{working_text}</span>{label[end:]}</p>")
-        self.file_path = label
-
-    def getFilePath (self):
-        return self.file_path
-
-
 class Widget(QWidget):
     def __init__(self):
         super().__init__()
 
         self.selectedSound = None
-        self.userSoundLast = None
         self.config = None
         self.userSound = None
         self.tf2_path = None
@@ -64,6 +54,7 @@ class Widget(QWidget):
         self.searchCustomSounds.setFont(font1)
 
         self.results = QListWidget(self)
+        self.results.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.results.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.results.itemPressed.connect(self.resultPressed)
         self.results.setFont(font2)
@@ -117,15 +108,12 @@ class Widget(QWidget):
         self.showMaximized()
 
     def availableSoundsListAdd(self, text):
-        label = FilePathListItem(text, '', 0, 0)
-        item = QListWidgetItem(self.availableSoundsList)
-        self.availableSoundsList.setItemWidget(item, label)
+        item = QListWidgetItem(text, self.availableSoundsList)
 
     def backButtonPressed(self, event):
         self.setAllVisible(False, self.invalidLabel, self.backButton, self.activeSoundLabel, self.availableSoundsList, self.changeButton, self.importButton)
         self.availableSoundsList.clear()
         self.userSound = None
-        self.userSoundLast = None
         self.searchCustomSounds.setText(self.lastText)
         self.setAllVisible(True, self.searchCustomSounds, self.results)
 
@@ -135,7 +123,7 @@ class Widget(QWidget):
         self.getResults()
 
     def resultPressed(self, item):
-        selectedSound = self.results.itemWidget(item).getFilePath()
+        selectedSound = item.text()
         self.selectedSound = selectedSound
         self.setAllVisible(False, self.searchCustomSounds, self.results)
         self.lastText = self.searchCustomSounds.text()
@@ -159,7 +147,6 @@ class Widget(QWidget):
 
     def getResults(self):
         if self.isVisible():
-            self.resultsLast = []
             self.results.clear()
             self.text, working_text = self.getUserText()
             if not working_text == '':
@@ -169,14 +156,9 @@ class Widget(QWidget):
                         return
                     indices = re.search(working_text, sound, re.IGNORECASE)
                     if not indices is None:
-                        label = FilePathListItem(sound, working_text, indices.start(), indices.end())
-                        label.resize(label.width(), 30)
-                        if (35 * (self.results.count() + 1)) <=  int((self.height() - self.searchCustomSounds.height()) / 2):
-                            item = QListWidgetItem()
-                            self.resultsLast.append(item)
-                            self.results.addItem(item)
-                            self.results.setItemWidget(item, label)
-                            self.results.resize(self.searchCustomSounds.width(), 35 * self.results.count())
+                        if (self.results.count() <  1 or self.results.sizeHintForRow(0) * (self.results.count() + 2)) + 25 <=  int((self.height() - self.searchCustomSounds.height()) / 2):
+                            item = QListWidgetItem(sound, self.results)
+                            self.results.resize(self.searchCustomSounds.width(), self.results.sizeHintForRow(0) * self.results.count() + 25  if self.results.count() > 0 else 0)
                         else:
                             return
                 if self.results.count() < 1:
@@ -215,7 +197,7 @@ class Widget(QWidget):
                             int(self.height() * 0.5 - (self.searchCustomSounds.height() * 0.5)))
             self.searchCustomSounds.resize(int(self.width() * 0.4), 50)
             self.results.move(self.searchCustomSounds.x(), self.searchCustomSounds.y() + self.searchCustomSounds.height())
-            self.results.resize(self.searchCustomSounds.width(), 35 * self.results.count())
+            self.results.resize(self.searchCustomSounds.width(), self.results.sizeHintForRow(0) * self.results.count() + 25 if self.results.count() > 0 else 0)
 
             self.activeSoundLabel.move(int(self.width() * 0.05), int(self.height() / 2 - 400))
             self.activeSoundLabel.resize(int(self.width() * 0.4), 800)
@@ -234,11 +216,7 @@ class Widget(QWidget):
             widget.setVisible(visible)
 
     def soundPressed (self, item):
-        self.userSound = self.availableSoundsList.itemWidget(item).getFilePath()
-        self.availableSoundsList.itemWidget(item).setStyleSheet("background-color: darkcyan;")
-        if not self.userSoundLast is None and self.userSoundLast != item:
-            self.availableSoundsList.itemWidget(self.userSoundLast).setStyleSheet("background-color: cadetblue;")
-        self.userSoundLast = item
+        self.userSound = item.text()
 
     def changePressed(self):
         if not self.userSound is None:

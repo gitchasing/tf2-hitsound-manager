@@ -15,7 +15,13 @@ color: white;
 
 QListWidget
 {
+color: white;
 border: 1px solid darkcyan;
+}
+
+QListWidget::item
+{
+padding: 5px;
 }
 
 QLineEdit
