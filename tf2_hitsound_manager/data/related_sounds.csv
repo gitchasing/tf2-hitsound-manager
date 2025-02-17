@@ -1,0 +1,15 @@
+name,first_is_numbered,number_of_leading_zeroes
+ambient/bird.wav,True,0
+ambient/cow.wav,True,0
+ambient/crow.wav,True,0
+ambient/dog.wav,True,0
+ambient/forest_bird.wav,True,0
+ambient/owl.wav,True,0
+items/cart_rolling_back_grind.wav,True,0
+ui/gamestartup.mp3,True,0
+player/crit_death.wav,True,0
+player/crit_hit.wav,False,0
+player/crit_received.wav,True,0
+player/drown.wav,True,0
+player/pl_impact_airblast.wav,True,0
+player/pl_impact_flare.wav,True,0

@@ -10,7 +10,7 @@ with open('LICENSE') as f:
 
 setup(
     name='tf2-hitsound-manager',
-    version='1.0.2a1',
+    version='1.1.0a1',
     description='A custom sound manager for Team Fortress 2',
     long_description=readme,
     author='gitchasing',
@@ -27,7 +27,7 @@ setup(
         ],
     },
     package_data={
-        "": ["assets/fonts/*.ttf", "assets/styles/*.qss", "data/custom_sounds.txt"],
+        "": ["assets/fonts/*.ttf", "assets/styles/*.qss", "data/*.txt", "data/*.csv"],
     },
     include_package_data=True,
 )

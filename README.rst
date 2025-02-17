@@ -16,7 +16,7 @@ Further, `this Reddit post`_ was (haphazardly) cited as the list of sounds inclu
 .. _this Reddit post: https://archive.ph/Ho8ae
 .. _This page: https://archive.ph/Rwjq7
 
-More official sources will be cited at in future versions.
+More official sources will be cited in future versions.
 
 Dependencies
 ************
