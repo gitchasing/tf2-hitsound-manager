@@ -1,10 +1,11 @@
+====================
 tf2-hitsound-manager
-####################
+====================
 
 A simple GUI to browse, set, and store ``Team Fortress 2`` custom sounds.
 
 Credits
-*******
+=======
 
 This project implements the `TF2 Build`_ typeface, created by Andrea Wicklund.
 
@@ -19,7 +20,7 @@ Further, `this Reddit post`_ was (haphazardly) cited as the list of sounds inclu
 More official sources will be cited in future versions.
 
 Dependencies
-************
+============
 
 * Python 3.8 or higher
 * `FFmpeg`_ (add this to your system PATH)
@@ -27,14 +28,14 @@ Dependencies
 .. _FFmpeg: https://www.ffmpeg.org/download.html
 
 Installation
-************
+============
 
 .. code-block:: console
 
     $ pip install tf2-hitsound-manager
 
 Usage/Configuration
-*******************
+===================
 
 .. code-block:: console
 
@@ -57,3 +58,9 @@ other than this; you would have to delete other directories manually.
 Further note that once a sound has been set through the manager, it will be assumed
 that said custom sound has already been stored, and will be deleted on the next change.
 If you intend to use this program, do not change custom sounds without the manager after having used it.
+
+Deleting sounds
+***************
+
+You can delete imports by selecting the import you want to delete and keying ``del``.
+More sweeping controls to delete imports will be added in a future update.

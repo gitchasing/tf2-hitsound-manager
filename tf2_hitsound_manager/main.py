@@ -9,10 +9,15 @@ from pydub import AudioSegment
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont, QFontDatabase, QColor
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QListWidget, QLineEdit, QListWidgetItem, QPushButton, \
-    QFileDialog, QDialog, QDesktopWidget, QTableWidget, QTableWidgetItem, QHeaderView, QComboBox
+from PyQt5.QtWidgets import *
+
+from send2trash import send2trash
 
 wd = os.path.dirname(__file__)
+
+def connect_all (*hooks_functions):
+    for hook_function in hooks_functions:
+        hook_function[0].connect(hook_function[1])
 
 def deactivate_sound(selectedSound, config, tf2_path):
     selectedSoundAbsolutePathDir = f"{tf2_path}/tf/custom/TF2 Hitsound Manager/sound/{os.path.dirname(selectedSound)}"
@@ -32,7 +37,7 @@ def deactivate_sound(selectedSound, config, tf2_path):
             os.makedirs(selectedSoundStorePathDir, exist_ok=True)
             shutil.copy(selectedSoundAbsolutePath, f"{selectedSoundStorePathDir}/{export_path}")
         if os.path.exists(selectedSoundAbsolutePath):
-            os.remove(selectedSoundAbsolutePath)
+            send2trash(os.path.abspath(selectedSoundAbsolutePath))
     config.pop('key', None)
     write_config(config)
     return export_path
@@ -58,6 +63,10 @@ def import_sound (selected_file, selected_sound):
 def set_all_visible(visible, *widgets):
     for widget in widgets:
         widget.setVisible(visible)
+
+def set_font_all (font, *widgets):
+    for widget in widgets:
+        widget.setFont(font)
 
 
 class BackButton (QPushButton):
@@ -88,51 +97,48 @@ class ChangeAllDialog (QDialog):
 
         self.relatedList = QListWidget(self)
         self.relatedList.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-        self.relatedList.itemPressed.connect(self.relatedListPressed)
-        self.relatedList.setFont(QFont("TF2 Build", 20))
         self.relatedList.move(int(self.width() * 0.25), int(self.height() * 0.15))
         self.relatedList.resize(int(self.width() * 0.5), int(self.height() * 0.5))
 
         self.rangeStartLabel = QLabel("Range start (inclusive):", self)
-        self.rangeStartLabel.setFont(QFont("TF2 Build", 15))
         self.rangeStartLabel.move(int(self.relatedList.x() * 1.2), self.relatedList.y() + self.relatedList.height() + 20)
         self.rangeStartLabel.resize(int(self.relatedList.width() * 0.5), 50)
 
         self.rangeStartCombo = QComboBox(self)
-        self.rangeStartCombo.setFont(QFont("TF2 Build", 15))
         self.rangeStartCombo.move(int(self.rangeStartLabel.x() + self.rangeStartLabel.width() + 10), self.relatedList.y() + self.relatedList.height() + 20)
         self.rangeStartCombo.resize(int(self.relatedList.width() * 0.2 - 10), 50)
         self.rangeStartCombo.setStyleSheet("background-color: darkcyan; color: white;")
-        self.rangeStartCombo.currentIndexChanged.connect(self.rangeStartChanged)
 
         self.rangeEndLabel = QLabel("Range end (inclusive):", self)
-        self.rangeEndLabel.setFont(QFont("TF2 Build", 15))
         self.rangeEndLabel.move(self.rangeStartLabel.x(), self.rangeStartLabel.y() + self.rangeStartLabel.height() + 20)
         self.rangeEndLabel.resize(int(self.relatedList.width() / 0.5), 50)
 
         self.rangeEndCombo = QComboBox(self)
-        self.rangeEndCombo.setFont(QFont("TF2 Build", 15))
         self.rangeEndCombo.move(self.rangeStartCombo.x(), self.rangeStartCombo.y() + self.rangeStartCombo.height() + 20)
         self.rangeEndCombo.resize(int(self.relatedList.width() * 0.2 - 10), 50)
         self.rangeEndCombo.setStyleSheet("background-color: darkcyan; color: white;")
-        self.rangeEndCombo.currentIndexChanged.connect(self.rangeEndChanged)
 
         self.changeAllButton = QPushButton("Change all", self)
-        self.changeAllButton.setFont(QFont("TF2 Build", 20))
         self.changeAllButton.move(int(self.width() * 0.5 - self.relatedList.width() * 0.25), self.rangeEndLabel.y() + self.rangeEndLabel.height() + 40)
         self.changeAllButton.resize(int(self.relatedList.width() * 0.5), 50)
         self.changeAllButton.setStyleSheet("background-color: darkcyan;")
-        self.changeAllButton.clicked.connect(self.changeAllPressed)
 
         self.resultsTable = QTableWidget(1, 3, self)
         self.resultsTable.move(int(self.width() * 0.1), int(self.height() * 0.1))
         self.resultsTable.resize(int(self.width() * 0.8), int(self.height() * 0.8))
         self.resultsTable.horizontalHeader().setVisible(False)
         self.resultsTable.verticalHeader().setVisible(False)
-        self.resultsTable.setFont(QFont("TF2 Build", 15))
         self.resultsTable.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
         self.resultsTable.setVisible(False)
+        set_font_all(QFont("TF2 Build", 20), self.relatedList, self.changeAllButton)
+        set_font_all(QFont("TF2 Build", 15), self.rangeStartLabel, self.rangeStartCombo, self.rangeEndLabel, self.rangeEndCombo, self.resultsTable)
+        connect_all(
+            (self.relatedList.itemPressed, self.relatedListPressed),
+            (self.rangeStartCombo.currentIndexChanged, self.rangeStartChanged),
+            (self.rangeEndCombo.currentIndexChanged, self.rangeEndChanged),
+            (self.changeAllButton.clicked, self.changeAllPressed),
+        )
 
         with open(f"{wd}/data/related_sounds.csv", 'r') as csv:
             next(csv)
@@ -152,7 +158,7 @@ class ChangeAllDialog (QDialog):
             self.close()
         else:
             self.resultsTable.setVisible(False)
-            set_all_visible(True, self.relatedList, self.rangeStartLabel, self.rangeStartCombo, self.rangeEndLabel, self.rangeEndCombo)
+            set_all_visible(True, self.relatedList, self.rangeStartLabel, self.rangeStartCombo, self.rangeEndLabel, self.rangeEndCombo, self.changeAllButton)
 
     def changeAllPressed (self, event):
         selected_item = self.relatedList.selectedItems()
@@ -161,14 +167,13 @@ class ChangeAllDialog (QDialog):
         user_relatedSound = selected_item[0].text()
         if user_relatedSound is None:
             return
-        user_relatedSound_split = user_relatedSound.split('.')
         file_dialog = QFileDialog()
         file_dialog.setWindowTitle(f"Select {1 + int(self.rangeEndCombo.currentText()) - int(self.rangeStartCombo.currentText())} files")
         file_dialog.setFileMode(QFileDialog.FileMode.ExistingFiles)
         file_dialog.setDirectory(f"{wd}/data/sound/{user_relatedSound.split('/')[0]}")
 
         if file_dialog.exec():
-            set_all_visible(False, self.relatedList, self.rangeStartLabel, self.rangeStartCombo, self.rangeEndLabel, self.rangeEndCombo)
+            set_all_visible(False, self.relatedList, self.rangeStartLabel, self.rangeStartCombo, self.rangeEndLabel, self.rangeEndCombo, self.changeAllButton)
             self.relatedList.setVisible(False)
             self.resultsTable.clear()
             selected_files = file_dialog.selectedFiles()
@@ -288,6 +293,8 @@ def write_config (config):
     with open(f"{wd}/data/config.json", 'w') as f:
         json.dump(config, f)
 
+
+
 class Widget (QWidget):
     def __init__ (self):
         super().__init__()
@@ -296,6 +303,7 @@ class Widget (QWidget):
         self.config = None
         self.userSound = None
         self.tf2_path = None
+        self.lastText = None
         self.customSounds = []
 
         self.text = None
@@ -307,59 +315,56 @@ class Widget (QWidget):
                 except StopIteration:
                     break
 
-
         self.setWindowTitle("TF2 Hitsound Manager")
-        font1 = QFont("TF2 Build", 20)
-        font2 = QFont("TF2 Build", 15)
         
         self.enterTF2Path = QLineEdit(self)
         self.enterTF2Path.setPlaceholderText("Enter TF2 file path....")
-        self.enterTF2Path.returnPressed.connect(self.getTF2Path)
-        self.enterTF2Path.setFont(font1)
 
-        self.invalidLabel = QLabel("Invalid directory", self)
-        self.invalidLabel.setFont(font1)
+        self.invalidLabel = QLabel(self)
         self.invalidLabel.setAlignment(Qt.AlignCenter)
 
         self.changeAllButton = QPushButton("Change all", self)
-        self.changeAllButton.clicked.connect(self.changeAllPressed)
-        self.changeAllButton.setFont(font2)
         self.changeAllButton.setStyleSheet("background-color: darkcyan;")
+
+        self.editTF2PathButton = QPushButton("Edit TF2 path", self)
+        self.editTF2PathButton.setStyleSheet("background-color: darkcyan;")
 
         self.searchCustomSounds = QLineEdit(self)
         self.searchCustomSounds.setPlaceholderText("Search custom sounds....")
-        self.searchCustomSounds.textChanged.connect(self.textChanged)
-        self.searchCustomSounds.setFont(font1)
 
         self.results = QListWidget(self)
         self.results.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.results.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.results.itemPressed.connect(self.resultPressed)
-        self.results.setFont(font2)
 
         self.backButton = BackButton('<-', self, self.backButtonPressed)
 
         self.activeSoundLabel = QLabel(self)
-        self.activeSoundLabel.setFont(font1)
         self.activeSoundLabel.setAlignment(Qt.AlignCenter)
 
         self.availableSoundsList = QListWidget(self)
-        self.availableSoundsList.itemPressed.connect(self.soundPressed)
-        self.availableSoundsList.setFont(font2)
 
         self.changeButton = QPushButton("Change", self)
-        self.changeButton.clicked.connect(self.changePressed)
-        self.changeButton.setFont(font2)
         self.changeButton.setStyleSheet("background-color: darkcyan;")
+
         self.importButton = QPushButton("Import", self)
-        self.importButton.clicked.connect(self.importPressed)
-        self.importButton.setFont(font2)
         self.importButton.setStyleSheet("background-color: darkcyan;")
+
         self.deactivateButton = QPushButton("Deactivate", self)
-        self.deactivateButton.clicked.connect(self.deactivatePressed)
-        self.deactivateButton.setFont(font2)
         self.deactivateButton.setStyleSheet("background-color: darkcyan;")
 
+        set_font_all(QFont("TF2 Build", 20), self.enterTF2Path, self.invalidLabel, self.searchCustomSounds, self.activeSoundLabel)
+        set_font_all(QFont("TF2 Build", 15), self.changeAllButton, self.editTF2PathButton, self.results, self.availableSoundsList, self.changeButton, self.importButton, self.deactivateButton)
+        connect_all(
+            (self.enterTF2Path.returnPressed, self.getTF2Path),
+            (self.changeAllButton.clicked, self.changeAllPressed),
+            (self.editTF2PathButton.clicked, self.editTF2PathPressed),
+            (self.searchCustomSounds.textChanged, self.textChanged),
+            (self.results.itemPressed, self.resultPressed),
+            (self.availableSoundsList.itemPressed, self.soundPressed),
+            (self.changeButton.clicked, self.changePressed),
+            (self.importButton.clicked, self.importPressed),
+            (self.deactivateButton.clicked, self.deactivatePressed)
+        )
         set_all_visible(False, self.invalidLabel, self.backButton, self.deactivateButton, self.activeSoundLabel, self.availableSoundsList, self.changeButton, self.importButton)
 
         try:
@@ -377,7 +382,7 @@ class Widget (QWidget):
 
             if search_environ(os.environ.values()) is None:
                 if search_environ(os.environ["PATH"].split(os.pathsep)) is None:
-                    set_all_visible(False, self.changeAllButton, self.searchCustomSounds, self.results)
+                    set_all_visible(False, self.searchCustomSounds, self.results, self.editTF2PathButton, self.changeAllButton)
         else:
             self.enterTF2Path.setVisible(False)
             self.config = j
@@ -389,11 +394,12 @@ class Widget (QWidget):
             item = QListWidgetItem(text, self.availableSoundsList)
 
     def backButtonPressed (self, event):
-        set_all_visible(False, self.invalidLabel, self.backButton, self.deactivateButton, self.activeSoundLabel, self.availableSoundsList, self.changeButton, self.importButton)
+        self.selectedSound = None
+        set_all_visible(False, self.invalidLabel, self.backButton, self.deactivateButton, self.activeSoundLabel, self.availableSoundsList, self.changeButton, self.importButton, self.enterTF2Path)
         self.availableSoundsList.clear()
         self.userSound = None
         self.searchCustomSounds.setText(self.lastText)
-        set_all_visible(True, self.changeAllButton, self.searchCustomSounds, self.results)
+        set_all_visible(True, self.searchCustomSounds, self.results, self.editTF2PathButton, self.changeAllButton)
 
     def changeAllPressed (self, event):
         dialog = ChangeAllDialog(self.config, self.customSounds)
@@ -404,14 +410,21 @@ class Widget (QWidget):
 
     def deactivatePressed (self, event):
         if not self.selectedSound is None:
-            base_name = os.path.basename(self.selectedSound).split('.')
             self.availableSoundsListAdd(deactivate_sound(self.selectedSound, self.config, self.tf2_path))
             self.activeSoundLabel.setText(f"<p>Active sound at<br>\"{self.selectedSound}\":<br><br><span style = \"color: grey;\">[None]<p>")
+
+    def editTF2PathPressed (self, event):
+        set_all_visible(False, self.searchCustomSounds, self.results, self.editTF2PathButton, self.changeAllButton)
+        self.invalidLabel.setText('')
+        self.lastText = self.searchCustomSounds.text()
+        self.searchCustomSounds.setText('')
+        self.enterTF2Path.setText(self.tf2_path)
+        set_all_visible(True, self.backButton, self.enterTF2Path)
 
     def resultPressed(self, item):
         selectedSound = item.text()
         self.selectedSound = selectedSound
-        set_all_visible(False, self.changeAllButton, self.searchCustomSounds, self.results)
+        set_all_visible(False, self.searchCustomSounds, self.results, self.editTF2PathButton, self.changeAllButton,)
         self.lastText = self.searchCustomSounds.text()
         self.searchCustomSounds.setText('')
         selectedSoundAbsolutePath = f"{self.tf2_path}/tf/custom/TF2 Hitsound Manager/sound/{selectedSound}"
@@ -452,24 +465,41 @@ class Widget (QWidget):
             else:
                 self.results.setVisible(False)
 
-    def getTF2Path(self):
+    def getTF2Path (self):
         tf2_path = self.enterTF2Path.text()
         if not os.path.exists(tf2_path) or not os.path.isdir(tf2_path):
+            self.invalidLabel.setText("Invalid file path")
             self.invalidLabel.setVisible(True)
         else:
+            if not self.lastText is None:
+                self.searchCustomSounds.setText(self.lastText)
             set_all_visible(False, self.enterTF2Path, self.invalidLabel)
             self.writeTF2Path(tf2_path)
-            set_all_visible(True, self.changeAllButton, self.searchCustomSounds, self.results)
+            set_all_visible(True, self.searchCustomSounds, self.results, self.editTF2PathButton, self.changeAllButton)
 
-    def getUserText(self):
+    def getUserText (self):
         text = self.searchCustomSounds.text()
         return text, text
 
-    def resizeEvent(self, event):
+    def keyPressEvent (self, event):
+        if self.selectedSound is not None and event.key() == Qt.Key_Delete:
+            selected_items = self.availableSoundsList.selectedItems()
+            if selected_items:
+                print("a")
+                selected_item = selected_items[0]
+                print("b")
+                selected_item_text = selected_item.text()
+                print("c")
+                self.availableSoundsList.takeItem(self.availableSoundsList.row(selected_item))
+                print(f"{wd}/data/sound/{os.path.dirname(self.selectedSound)}/{selected_item_text}")
+                send2trash(os.path.abspath(f"{wd}/data/sound/{os.path.dirname(self.selectedSound)}/{selected_item_text}"))
+                print("e")
+
+    def resizeEvent (self, event):
         super().resizeEvent(event)
         self.resizeWidgets()
 
-    def resizeWidgets(self):
+    def resizeWidgets (self):
         if self.isVisible():
             self.enterTF2Path.move(int(self.width() * 0.3 - (self.searchCustomSounds.width() * 0.3)),
                 int(self.height() * 0.3 - (self.searchCustomSounds.height() * 0.3)))
@@ -480,6 +510,9 @@ class Widget (QWidget):
 
             self.changeAllButton.move(int(self.width() * 0.9 - 10), 10)
             self.changeAllButton.resize(int(self.width() * 0.1), 50)
+
+            self.editTF2PathButton.resize(int(self.width() * 0.12), 50)
+            self.editTF2PathButton.move(self.changeAllButton.x() - self.editTF2PathButton.width() - 20, self.changeAllButton.y())
 
             self.searchCustomSounds.move(int(self.width() * 0.5 - (self.searchCustomSounds.width() * 0.5)),
                             int(self.height() * 0.5 - (self.searchCustomSounds.height() * 0.5)))
@@ -541,7 +574,10 @@ class Widget (QWidget):
         self.getResults()
 
     def writeTF2Path (self, tf2_path):
-        self.config = {'tf2_path': tf2_path}
+        if self.config is None:
+            self.config = {'tf2_path': tf2_path}
+        else:
+            self.config['tf2_path'] = tf2_path
         self.tf2_path = tf2_path
         write_config(self.config)
 
@@ -550,6 +586,7 @@ def main ():
    QFontDatabase.addApplicationFont(f"{wd}/assets/fonts/tf2build.ttf")
    app.setStyleSheet(open(f'{wd}/assets/styles/style.qss').read())
    widget = Widget()
+   widget.setWindowTitle('TF2 Hitsound Manager')
    sys.exit(app.exec_())
 
 
